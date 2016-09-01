@@ -72,8 +72,28 @@ void MainWindow::paintEvent(QPaintEvent *)
         painter.drawLine(pointOne,pointTwo);
         i = i + 40;
     }
+
     QBrush brush;
-    brush.setStyle(Qt::SolidPattern);
+     brush.setStyle(Qt::SolidPattern);
+    brush.setColor(Qt::black);
+    painter.setBrush(brush);
+    painter.drawEllipse(155,155,10,10);
+     painter.drawEllipse(315,315,10,10);
+     painter.drawEllipse(475,155,10,10);
+      painter.drawEllipse(155,475,10,10);
+       painter.drawEllipse(475,475,10,10);
+     for (int i = 0; i < danger_x.size(); i++)
+         {
+ //            QImage bomb("C:\\Users\\Starry Sky\\Desktop\\myGobang\\Gobang6\\myGobang_client6\\Bomb.png");
+ //            QImage nbomb = bomb.scaled(reclongnes,reclongnes,Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+ //            p->setPen(QPen(Qt::red));
+          brush.setColor(Qt::red);
+          painter.setBrush(brush);
+          painter.drawEllipse((danger_y[i])*40-5,(danger_x[i])*40-5,10,10);
+ //            p->drawImage(height()/10+(danger_x[i]-1)*reclongnes-reclong/(lines*2),height()/10+(danger_y[i]-1)*reclongnes-reclong/(lines*2),nbomb);
+         }
+
+
     for(int i=0;i<this->numCounts;i++)
     {
 
@@ -88,13 +108,7 @@ void MainWindow::paintEvent(QPaintEvent *)
         painter.setBrush(brush);
         painter.drawEllipse(this->counts[i][0]-16,this->counts[i][1]-16,32,32);//画圆函数的特殊性。找左上角，所以也可以画椭圆
     }
-//    for (int i = 0; i < danger_x.size(); i++)
-//        {
-//            QImage bomb("C:\\Users\\Starry Sky\\Desktop\\myGobang\\Gobang6\\myGobang_client6\\Bomb.png");
-//            QImage nbomb = bomb.scaled(reclongnes,reclongnes,Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-//            p->setPen(QPen(Qt::red));
-//            p->drawImage(height()/10+(danger_x[i]-1)*reclongnes-reclong/(lines*2),height()/10+(danger_y[i]-1)*reclongnes-reclong/(lines*2),nbomb);
-//        }
+
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *mouseEvent)
@@ -121,6 +135,7 @@ void MainWindow::mousePressEvent(QMouseEvent *mouseEvent)
         this->counts[this->numCounts-1][2] = this->numCounts%2;
         this->update();
         checkWin(x,y);
+        danger_judge();
 
         //用于绘图
     }
@@ -187,6 +202,7 @@ void MainWindow::recvMessage()
         this->counts[this->numCounts-1][2] = this->numCounts%2;
         this->update();
         checkWin(x,y);
+        danger_judge();
              //用于绘图
     }
 
@@ -334,88 +350,98 @@ void MainWindow::tie()
     }
     this->numCounts = 0;//下子数目为0，即下一个子从黑子开始
 }
-//void MainWindow::danger_judge()
-//{
-//    QVector<int> xx;
-//    QVector<int> yy;
-//    QVector<int> num;
-//    QVector<int> type;
-//    xx.clear();
-//    yy.clear();
+bool MainWindow::not_contain_other(int x,int y){
+    if(flag&&checkBoard[x-1][y-1]!=-1){return true;}
+    if(!flag&&checkBoard[x-1][y-1]!=1){return true;}
+    return false;
+}
+bool MainWindow::not_contain_self(int x,int y){
+    if(flag&&checkBoard[x-1][y-1]!=1){return true;}
+    if(!flag&&checkBoard[x-1][y-1]!=-1){return true;}
+    return false;
+}
+void MainWindow::danger_judge()
+{
+    QVector<int> xx;
+    QVector<int> yy;
+    QVector<int> num;
+    QVector<int> type;
+    xx.clear();
+    yy.clear();
 
-//    int fx[9] = {0,-1,1,0,0,1,-1,-1,1};
-//    int fy[9] = {0,-1,1,-1,1,-1,1,0,0};
+    int fx[9] = {0,-1,1,0,0,1,-1,-1,1};
+    int fy[9] = {0,-1,1,-1,1,-1,1,0,0};
 
-//    for (int x = 1; x <= 15; x++)
-//        for (int y = 1;  y <= 15; y++)
-//            if ( checkBoard[x][y]==0 )
-//            {
-//                num.clear();
-//                type.clear();
-//                for (int i = 1; i <= 8; i++)
-//                {
-//                    int x_next,y_next;
-//                    xx.clear();
-//                    yy.clear();
-//                    xx.append(x);
-//                    yy.append(y);
-//                    int s=-1,t=0;
-//                    while (s<t)
-//                    {
-//                        s++;
-//                        x_next = xx[s] + fx[i];
-//                        y_next = yy[s] + fy[i];
-//                        if ( !not_contain_other(x_next,y_next) )
-//                        {
-//                            xx.append(x_next);
-//                            yy.append(y_next);
-//                            t++;
-//                        }
-//                    }
-//                    if ( xx.size() == 3 && not_contain_self(xx[2] + fx[i],yy[2] + fy[i]) )
-//                    {
-//                        bool f =true;
-//                        if ( !(xx[2] + fx[i] >= 1 && xx[2] + fx[i] <= 15 &&
-//                               yy[2] + fy[i] >= 1 && yy[2] + fy[i] <= 15) ) f = false;
-//                        int ju;
-//                        if ( i % 2 == 0 ) ju = i-1;
-//                          else ju = i+1;
-//                        if ( !not_contain_self(x + fx[ju],y + fy[ju]) ||
-//                              x + fx[ju] <= 0 || x + fx[ju] >= 16 ||
-//                              y + fy[ju] <= 0 || y + fy[ju] >= 16 )
-//                            f = false;
-//                        if ( f )
-//                        {
-//                            num.append(i);
-//                            type.append(3);
-//                        }
-//                    }
-//                    if ( xx.size() == 4 && !not_contain_self(xx[3] + fx[i],yy[3] + fy[i]) )
-//                    {
-//                        bool f =true;
-//                        int ju;
-//                        if ( i % 2 == 0 ) ju = i-1;
-//                          else ju = i+1;
-//                        if (  !not_contain_self(x + fx[ju],y + fy[ju]) ||
-//                              x + fx[ju] <= 0 || x + fx[ju] >= 16 ||
-//                              y + fy[ju] <= 0 || y + fy[ju] >= 16 )
-//                            f = false;
-//                        if ( f )
-//                        {
-//                            num.append(i);
-//                            type.append(4);
-//                        }
-//                    }
-//                }
-//                if ( num.size() < 2 ) continue;
-//                for (int i = 0; i < num.size()-1; i++)
-//                    if ( (num[i+1]-num[i] == 1 && (i+1) % 2 == 0 ) || (type[i+1]==4 && type[i] == 4) )
-//                    {
-//                        num.remove(i+1);
-//                        type.remove(i+1);
-//                    }
-//                if ( num.size() >= 2 ) { danger_x.append(x); danger_y.append(y); }
+    for (int x = 1; x <= 15; x++)
+        for (int y = 1;  y <= 15; y++)
+            if ( not_contain_self(x,y) && not_contain_other(x,y) )
+            {
+                num.clear();
+                type.clear();
+                for (int i = 1; i <= 8; i++)
+                {
+                    int x_next,y_next;
+                    xx.clear();
+                    yy.clear();
+                    xx.append(x);
+                    yy.append(y);
+                    int s=-1,t=0;
+                    while (s<t)
+                    {
+                        s++;
+                        x_next = xx[s] + fx[i];
+                        y_next = yy[s] + fy[i];
+                        if ( !not_contain_other(x_next,y_next) )
+                        {
+                            xx.append(x_next);
+                            yy.append(y_next);
+                            t++;
+                        }
+                    }
+                    if ( xx.size() == 3 && not_contain_self(xx[2] + fx[i],yy[2] + fy[i]) )
+                    {
+                        bool f =true;
+                        if ( !(xx[2] + fx[i] >= 1 && xx[2] + fx[i] <= 15 &&
+                               yy[2] + fy[i] >= 1 && yy[2] + fy[i] <= 15) ) f = false;
+                        int ju;
+                        if ( i % 2 == 0 ) ju = i-1;
+                          else ju = i+1;
+                        if ( !not_contain_self(x + fx[ju],y + fy[ju]) ||
+                              x + fx[ju] <= 0 || x + fx[ju] >= 16 ||
+                              y + fy[ju] <= 0 || y + fy[ju] >= 16 )
+                            f = false;
+                        if ( f )
+                        {
+                            num.append(i);
+                            type.append(3);
+                        }
+                    }
+                    if ( xx.size() == 4 && !not_contain_self(xx[3] + fx[i],yy[3] + fy[i]) )
+                    {
+                        bool f =true;
+                        int ju;
+                        if ( i % 2 == 0 ) ju = i-1;
+                          else ju = i+1;
+                        if (  !not_contain_self(x + fx[ju],y + fy[ju]) ||
+                              x + fx[ju] <= 0 || x + fx[ju] >= 16 ||
+                              y + fy[ju] <= 0 || y + fy[ju] >= 16 )
+                            f = false;
+                        if ( f )
+                        {
+                            num.append(i);
+                            type.append(4);
+                        }
+                    }
+                }
+                if ( num.size() < 2 ) continue;
+                for (int i = 0; i < num.size()-1; i++)
+                    if ( (num[i+1]-num[i] == 1 && (i+1) % 2 == 0 ) || (type[i+1]==4 && type[i] == 4) )
+                    {
+                        num.remove(i+1);
+                        type.remove(i+1);
+                    }
+                if ( num.size() >= 2 ) { danger_x.append(x); danger_y.append(y); }
 
-//            }
-//    update();
-//}
+            }
+    update();
+}

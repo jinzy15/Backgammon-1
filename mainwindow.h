@@ -40,19 +40,21 @@ public:
     int numCounts;
     int counts[225][3];//0表示x   1表示y    2表示颜色
     int checkBoard[15][15];//模拟棋盘，1表示黑色，-1表示白色
-//    QVector<int>danger_x;
-//    QVector<int>danger_y;
-
-
+    QVector<int>danger_x;
+    QVector<int>danger_y;
     QTcpSocket *readWriteSocket;
     QTcpServer  *listenSocket;
     bool flag=true;
+    void danger_judge();
 
     Dialog* creatDialog;
     connectDialog* connectDialog;
+    bool not_contain_self(int ,int);
+    bool not_contain_other(int ,int);
 
 private:
     Ui::MainWindow *ui;
+
 public slots:
     void showCreateDialog();
     void showConnectDialog();

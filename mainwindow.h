@@ -8,10 +8,18 @@
 #include <QMouseEvent>
 #include <QDebug>
 #include <QMessageBox>
+#include "dialog.h"
+#include "connectdialog.h"
+#include <QtNetwork/QTcpServer>
+#include <QtNetwork/QTcpSocket>
+#include <QtNetwork/QHostAddress>
+#include <QVector>
 
 namespace Ui {
 class MainWindow;
 }
+class Dialog;
+class connectDialog;
 
 class MainWindow : public QMainWindow
 {
@@ -32,9 +40,26 @@ public:
     int numCounts;
     int counts[225][3];//0表示x   1表示y    2表示颜色
     int checkBoard[15][15];//模拟棋盘，1表示黑色，-1表示白色
+//    QVector<int>danger_x;
+//    QVector<int>danger_y;
+
+
+    QTcpSocket *readWriteSocket;
+    QTcpServer  *listenSocket;
+    bool flag=true;
+
+    Dialog* creatDialog;
+    connectDialog* connectDialog;
 
 private:
     Ui::MainWindow *ui;
+public slots:
+    void showCreateDialog();
+    void showConnectDialog();
+    void initServer();
+    void acceptConnection();
+    void recvMessage();
+    void sendMessage(int ,int );
 };
 
 #endif // MAINWINDOW_H

@@ -1,5 +1,10 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QDebug>
+#include <QtNetwork/QTcpServer>
+#include <QtNetwork/QTcpSocket>
+#include <QtNetwork/QHostAddress>
+#include <QVector>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -15,13 +20,31 @@ MainWindow::MainWindow(QWidget *parent) :
             checkBoard[i][j] = 0;
         }
     }
-    this->setMaximumHeight(640);
-    this->setMinimumHeight(640);
-    this->setMaximumSize(640,640);
-    this->setMinimumSize(640,640);
+//    this->setMaximumHeight(640);
+//    this->setMinimumHeight(640);
+//    this->setMaximumSize(640,640);
+//    this->setMinimumSize(640,640);
     ui->setupUi(this);
+    connect(ui->createButton,SIGNAL(clicked()),this,SLOT(showCreateDialog()));
+    connect(ui->connectButton,SIGNAL(clicked()),this,SLOT(showConnectDialog()));
+    connect(ui->quitButton,SIGNAL(clicked()),this,SLOT(close()));
+
+//    readWriteSocket=new QTcpSocket();
+//    listenSocket=new QTcpServer();
 
 }
+void MainWindow::showCreateDialog(){
+    qDebug()<<"show create";
+     creatDialog=new Dialog(this);
+        creatDialog->show();
+
+}
+void MainWindow::showConnectDialog(){
+    qDebug()<<"show connect";
+   connectDialog=new class connectDialog(this);
+   connectDialog->show();
+}
+
 
 MainWindow::~MainWindow()
 {
@@ -65,12 +88,87 @@ void MainWindow::paintEvent(QPaintEvent *)
         painter.setBrush(brush);
         painter.drawEllipse(this->counts[i][0]-16,this->counts[i][1]-16,32,32);//画圆函数的特殊性。找左上角，所以也可以画椭圆
     }
+//    for (int i = 0; i < danger_x.size(); i++)
+//        {
+//            QImage bomb("C:\\Users\\Starry Sky\\Desktop\\myGobang\\Gobang6\\myGobang_client6\\Bomb.png");
+//            QImage nbomb = bomb.scaled(reclongnes,reclongnes,Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+//            p->setPen(QPen(Qt::red));
+//            p->drawImage(height()/10+(danger_x[i]-1)*reclongnes-reclong/(lines*2),height()/10+(danger_y[i]-1)*reclongnes-reclong/(lines*2),nbomb);
+//        }
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *mouseEvent)
 {
     int x = int(float(mouseEvent->x())/40+0.5)*40;
     int y = int(float(mouseEvent->y())/40+0.5)*40;
+
+    //按下的位置在棋盘内
+    if((flag&&this->numCounts%2 == 0)||(!flag&&this->numCounts%2 == 1))
+    {if(x>0&&x<640&&y>0&&y<640&&this->checkBoard[y/40-1][x/40-1]==0)//当前按键位置在棋盘内并且当前位置没有棋子
+    {
+        sendMessage(x,y);
+        this->numCounts += 1;//棋子数目加一
+        if(this->numCounts%2 != 0)//棋局矩阵构造
+        {
+            this->checkBoard[y/40-1][x/40-1] = 1; //1表示黑色
+        }
+        else
+        {
+            this->checkBoard[y/40-1][x/40-1] = -1;//-1表示白色
+        }
+        this->counts[this->numCounts-1][0] = x;
+        this->counts[this->numCounts-1][1] = y;
+        this->counts[this->numCounts-1][2] = this->numCounts%2;
+        this->update();
+        checkWin(x,y);
+
+        //用于绘图
+    }
+    }
+
+}//x  y为需要加入棋子的圆心位置。。。逻辑结构为   从棋盘数据中找出是否有子。   没有加入到两个数据结构中。根据下棋数判断黑白  并重绘画图。并判断能否胜出。
+//flag为真证明下的是黑棋，否则下的是白棋
+
+
+void MainWindow::initServer()
+{
+    this->listenSocket=new QTcpServer();
+    this->listenSocket->listen(QHostAddress::Any,8888);
+    QObject::connect(this->listenSocket,SIGNAL(newConnection()),this,SLOT(acceptConnection()));
+
+}
+
+void MainWindow::acceptConnection()
+{
+    this->readWriteSocket =this->listenSocket->nextPendingConnection();
+    flag=true;
+    QMessageBox::information(NULL, tr("Complete!"), tr("Connect successfully."), QMessageBox::Ok);
+    QObject::connect(this->readWriteSocket,SIGNAL(readyRead()),this,SLOT(recvMessage()));
+}
+
+void MainWindow::sendMessage(int x, int y)
+{
+    QByteArray array;
+    array.clear();
+    array.append(QString::number(x)+"/"+QString::number(y));
+    this->readWriteSocket->write(array);
+}
+void MainWindow::recvMessage()
+{
+    //qDebug() << "server222222222222222222222222";
+    QString posstring;
+    posstring = this->readWriteSocket->readAll();
+    int m;
+    QString xx,yy;
+    for (int i = 0; i < posstring.size(); i++)
+        if ( posstring[i] == '/' ) m = i;
+    xx.clear();yy.clear();
+    for (int i = 0; i < m; i++) xx += posstring[i];
+    for (int i = m+1; i < posstring.size(); i++) yy += posstring[i];
+
+
+    int x = xx.toInt();
+    int y = yy.toInt();
 
     //按下的位置在棋盘内
     if(x>0&&x<640&&y>0&&y<640&&this->checkBoard[y/40-1][x/40-1]==0)//当前按键位置在棋盘内并且当前位置没有棋子
@@ -87,11 +185,19 @@ void MainWindow::mousePressEvent(QMouseEvent *mouseEvent)
         this->counts[this->numCounts-1][0] = x;
         this->counts[this->numCounts-1][1] = y;
         this->counts[this->numCounts-1][2] = this->numCounts%2;
+        this->update();
         checkWin(x,y);
-        this->update();      //用于绘图
+             //用于绘图
     }
 
 }//x  y为需要加入棋子的圆心位置。。。逻辑结构为   从棋盘数据中找出是否有子。   没有加入到两个数据结构中。根据下棋数判断黑白  并重绘画图。并判断能否胜出。
+
+
+
+
+
+
+
 
 void MainWindow::checkWin(int x, int y)
 {
@@ -228,3 +334,88 @@ void MainWindow::tie()
     }
     this->numCounts = 0;//下子数目为0，即下一个子从黑子开始
 }
+//void MainWindow::danger_judge()
+//{
+//    QVector<int> xx;
+//    QVector<int> yy;
+//    QVector<int> num;
+//    QVector<int> type;
+//    xx.clear();
+//    yy.clear();
+
+//    int fx[9] = {0,-1,1,0,0,1,-1,-1,1};
+//    int fy[9] = {0,-1,1,-1,1,-1,1,0,0};
+
+//    for (int x = 1; x <= 15; x++)
+//        for (int y = 1;  y <= 15; y++)
+//            if ( checkBoard[x][y]==0 )
+//            {
+//                num.clear();
+//                type.clear();
+//                for (int i = 1; i <= 8; i++)
+//                {
+//                    int x_next,y_next;
+//                    xx.clear();
+//                    yy.clear();
+//                    xx.append(x);
+//                    yy.append(y);
+//                    int s=-1,t=0;
+//                    while (s<t)
+//                    {
+//                        s++;
+//                        x_next = xx[s] + fx[i];
+//                        y_next = yy[s] + fy[i];
+//                        if ( !not_contain_other(x_next,y_next) )
+//                        {
+//                            xx.append(x_next);
+//                            yy.append(y_next);
+//                            t++;
+//                        }
+//                    }
+//                    if ( xx.size() == 3 && not_contain_self(xx[2] + fx[i],yy[2] + fy[i]) )
+//                    {
+//                        bool f =true;
+//                        if ( !(xx[2] + fx[i] >= 1 && xx[2] + fx[i] <= 15 &&
+//                               yy[2] + fy[i] >= 1 && yy[2] + fy[i] <= 15) ) f = false;
+//                        int ju;
+//                        if ( i % 2 == 0 ) ju = i-1;
+//                          else ju = i+1;
+//                        if ( !not_contain_self(x + fx[ju],y + fy[ju]) ||
+//                              x + fx[ju] <= 0 || x + fx[ju] >= 16 ||
+//                              y + fy[ju] <= 0 || y + fy[ju] >= 16 )
+//                            f = false;
+//                        if ( f )
+//                        {
+//                            num.append(i);
+//                            type.append(3);
+//                        }
+//                    }
+//                    if ( xx.size() == 4 && !not_contain_self(xx[3] + fx[i],yy[3] + fy[i]) )
+//                    {
+//                        bool f =true;
+//                        int ju;
+//                        if ( i % 2 == 0 ) ju = i-1;
+//                          else ju = i+1;
+//                        if (  !not_contain_self(x + fx[ju],y + fy[ju]) ||
+//                              x + fx[ju] <= 0 || x + fx[ju] >= 16 ||
+//                              y + fy[ju] <= 0 || y + fy[ju] >= 16 )
+//                            f = false;
+//                        if ( f )
+//                        {
+//                            num.append(i);
+//                            type.append(4);
+//                        }
+//                    }
+//                }
+//                if ( num.size() < 2 ) continue;
+//                for (int i = 0; i < num.size()-1; i++)
+//                    if ( (num[i+1]-num[i] == 1 && (i+1) % 2 == 0 ) || (type[i+1]==4 && type[i] == 4) )
+//                    {
+//                        num.remove(i+1);
+//                        type.remove(i+1);
+//                    }
+//                if ( num.size() >= 2 ) { danger_x.append(x); danger_y.append(y); }
+
+//            }
+//    update();
+//}

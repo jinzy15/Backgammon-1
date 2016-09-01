@@ -6,20 +6,60 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>532</width>
-    <height>379</height>
+    <width>901</width>
+    <height>665</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
-  <widget class="QWidget" name="centralWidget"/>
+  <widget class="QWidget" name="centralWidget">
+   <widget class="QPushButton" name="createButton">
+    <property name="geometry">
+     <rect>
+      <x>680</x>
+      <y>70</y>
+      <width>113</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>create</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="connectButton">
+    <property name="geometry">
+     <rect>
+      <x>680</x>
+      <y>200</y>
+      <width>113</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>connect</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="quitButton">
+    <property name="geometry">
+     <rect>
+      <x>680</x>
+      <y>330</y>
+      <width>113</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>quit</string>
+    </property>
+   </widget>
+  </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>532</width>
+     <width>901</width>
      <height>22</height>
     </rect>
    </property>
